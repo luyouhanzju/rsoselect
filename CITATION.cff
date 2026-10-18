@@ -1,0 +1,60 @@
+cff-version: 1.2.0
+message: "If you use rsoselect, please cite the software and the papers below."
+title: "rsoselect: Ridge selection operator for linear, partially linear and generalized partially linear models"
+version: 0.2.0
+license: BSD-3-Clause
+authors:
+  - family-names: Lu
+    given-names: Youhan
+  - family-names: Zhang
+    given-names: Kan
+  - family-names: Hu
+    given-names: Juan
+  - family-names: Wu
+    given-names: Yichao
+preferred-citation:
+  type: article
+  title: "A Unified Approach to Variable Selection for Partially Linear Models"
+  authors:
+    - family-names: Lu
+      given-names: Youhan
+    - family-names: Dong
+      given-names: Yushen
+    - family-names: Hu
+      given-names: Juan
+    - family-names: Wu
+      given-names: Yichao
+  journal: "Journal of Computational and Graphical Statistics"
+  volume: 33
+  issue: 1
+  year: 2024
+  doi: 10.1080/10618600.2023.2216254
+references:
+  - type: article
+    title: "Can't Ridge Regression Perform Variable Selection?"
+    authors:
+      - family-names: Wu
+        given-names: Yichao
+    journal: Technometrics
+    volume: 63
+    issue: 2
+    start: 263
+    end: 271
+    year: 2021
+    doi: 10.1080/00401706.2020.1791254
+  - type: article
+    title: "A New Approach to Select Linear and Nonparametric Predictors Simultaneously for Generalised Partially Linear Models"
+    authors:
+      - family-names: Lu
+        given-names: Youhan
+      - family-names: Hu
+        given-names: Juan
+      - family-names: Wu
+        given-names: Yichao
+    journal: "Journal of Nonparametric Statistics"
+    volume: 37
+    issue: 4
+    start: 1298
+    end: 1316
+    year: 2025
+    doi: 10.1080/10485252.2025.2556412
