@@ -20,7 +20,7 @@ are chosen in one optimization problem ([Lu et al., 2024](#references);
 ## Installation
 
 ```bash
-git clone https://github.com/<user>/rsoselect.git
+git clone https://github.com/luyouhanzju/rsoselect.git
 cd rsoselect
 pip install -e .
 ```
