@@ -26,7 +26,11 @@ from .tuning import CRITERIA, bic, check_boundary, default_taus
 try:
     from sklearn.base import BaseEstimator, RegressorMixin
 except ImportError:  # usable without sklearn
-    BaseEstimator, RegressorMixin = object, object
+    class BaseEstimator:  # minimal stand-ins so RSO can still subclass them
+        pass
+
+    class RegressorMixin:
+        pass
 
 
 # --------------------------------------------------------------------- algebra
