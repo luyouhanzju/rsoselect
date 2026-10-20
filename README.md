@@ -1,5 +1,10 @@
 # rsoselect
 
+[![tests](https://github.com/luyouhanzju/rsoselect/actions/workflows/tests.yml/badge.svg)](https://github.com/luyouhanzju/rsoselect/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/rsoselect)](https://pypi.org/project/rsoselect/)
+[![Python](https://img.shields.io/pypi/pyversions/rsoselect)](https://pypi.org/project/rsoselect/)
+[![License](https://img.shields.io/badge/license-BSD--3--Clause-blue)](LICENSE)
+
 **Variable selection with the ridge selection operator (RSO) for linear, partially linear,
 and generalized partially linear models.**
 
@@ -18,6 +23,13 @@ are chosen in one optimization problem ([Lu et al., 2024](#references);
 | g(E[y]) = X&beta; + f(Z) | `GPLM` | Lu, Hu and Wu (2025), *Journal of Nonparametric Statistics* |
 
 ## Installation
+
+```bash
+pip install rsoselect                # core
+pip install "rsoselect[sklearn]"     # with scikit-learn integration
+```
+
+From source:
 
 ```bash
 git clone https://github.com/luyouhanzju/rsoselect.git
