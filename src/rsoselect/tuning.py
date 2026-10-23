@@ -11,7 +11,7 @@ import warnings
 
 import numpy as np
 
-CRITERIA = ("profile_bic", "naive_bic", "cv")
+CRITERIA = ("profile_bic", "naive_bic", "cv", "loo")
 
 
 def bic(rss, df, n):

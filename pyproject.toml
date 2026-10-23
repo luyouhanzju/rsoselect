@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rsoselect"
-version = "0.2.1"
+version = "0.3.0"
 description = "Ridge selection operator (RSO) for variable selection in linear, partially linear and generalized partially linear models"
 readme = "README.md"
 license = "BSD-3-Clause"
