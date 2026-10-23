@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use rsoselect, please cite the software and the papers listed under references."
 title: "rsoselect: Ridge selection operator for linear, partially linear and generalized partially linear models"
 type: software
-version: 0.2.1
+version: 0.3.0
 license: BSD-3-Clause
 repository-code: "https://github.com/luyouhanzju/rsoselect"
 authors:

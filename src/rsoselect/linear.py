@@ -16,6 +16,15 @@ tau is tuned over a grid by
                              BIC = n log RSS_ols + log(n) |P|        (paper eq. 10)
     "naive_bic"            : BIC = n log RSS(gamma_hat) + log(n) tr(H) (paper eq. 7)
     "cv"                   : validation MSE over `cv` splits (e.g. TimeSeriesSplit)
+    "loo"                  : closed-form leave-one-out MSE (PRESS), mean of
+                             w_i * (e_i / (1 - h_ii))^2 / mean(w), with H the hat matrix of
+                             the reported fit (OLS on P(tau) if refit, else the ridge
+                             smoother at gamma_hat(tau) restricted to P(tau)).
+                             Conditional on gamma_hat(tau): gamma is not re-estimated
+                             without observation i, so it is cheaper and more optimistic
+                             than exact LOO, which is criterion="cv", cv=LeaveOneOut().
+                             Like AIC, LOO targets prediction error and tends to keep a
+                             few extra variables; the BIC criteria target selection.
 """
 
 import numpy as np
@@ -80,8 +89,10 @@ class RSO(BaseEstimator, RegressorMixin):
         Candidate taus. Default: `n_taus` values log-spaced in p*[0.05, 50]
         (see rsoselect.tuning.default_taus).
     n_taus : int, default 30
-    criterion : {"profile_bic", "naive_bic", "cv"}, default "profile_bic"
-        How tau is chosen (ignored when `tau` is given).
+    criterion : {"profile_bic", "naive_bic", "cv", "loo"}, default "profile_bic"
+        How tau is chosen (ignored when `tau` is given). "loo" is the closed-form
+        leave-one-out MSE given gamma_hat(tau) (see module docstring); for exact
+        leave-one-out use criterion="cv", cv=LeaveOneOut().
     cv : int or sklearn splitter, default 5
         Used only when criterion="cv". Pass TimeSeriesSplit(...) for time series.
     refit : bool, default True
@@ -146,7 +157,29 @@ class RSO(BaseEstimator, RegressorMixin):
         Xs = Xc / x_scale
         Xw = Xs * w[:, None]
         return dict(n=n, p=p, G=Xs.T @ Xw, b=Xw.T @ yc, yWy=float(yc @ (w * yc)),
-                    x_mean=x_mean, y_mean=y_mean, x_scale=x_scale)
+                    x_mean=x_mean, y_mean=y_mean, x_scale=x_scale, Xs=Xs, yc=yc, w=w)
+
+    def _loo(self, d, gamma, idx, beta_ols):
+        """Closed-form leave-one-out MSE of the fit reported for this tau."""
+        Xs, yc, w, n = d["Xs"], d["yc"], d["w"], d["n"]
+        if len(idx) == 0:
+            beta_S, A = np.zeros(0), np.zeros((0, 0))
+        elif self.refit:
+            beta_S = beta_ols
+            A = np.linalg.pinv(d["G"][np.ix_(idx, idx)])
+        else:
+            g = np.zeros_like(gamma)
+            g[idx] = gamma[idx]
+            beta, A, _ = ridge_beta(d["G"], d["b"], g, n)
+            beta_S = beta[idx]
+        XS = Xs[:, idx]
+        resid = yc - XS @ beta_S
+        h = w * np.einsum("ij,jk,ik->i", XS, A, XS)
+        if self.fit_intercept:
+            h = h + w / n
+        if np.any(h >= 1.0 - 1e-10):
+            return np.inf
+        return float(w @ (resid / (1.0 - h)) ** 2 / w.sum())
 
     def _taus(self, p):
         if self.tau is not None:
@@ -155,7 +188,7 @@ class RSO(BaseEstimator, RegressorMixin):
             return np.asarray(self.taus, dtype=float)
         return default_taus(p, self.n_taus)
 
-    def _path(self, X, y, w, taus):
+    def _path(self, X, y, w, taus, loo=True):
         """Solve RSO for every tau. Coefficients on the original scale."""
         d = self._prepare(X, y, w)
         n, p, G, b, yWy = d["n"], d["p"], d["G"], d["b"], d["yWy"]
@@ -181,6 +214,7 @@ class RSO(BaseEstimator, RegressorMixin):
                 rss=rss, df=df, naive_bic=bic(rss, df, n),
                 rss_refit=rss_ols, df_refit=float(len(idx)),
                 profile_bic=bic(rss_ols, len(idx), n),
+                loo=self._loo(d, gamma, idx, beta_ols) if loo else None,
                 coef=coef, intercept=float(d["y_mean"] - d["x_mean"] @ coef)))
         return path
 
@@ -227,7 +261,7 @@ class RSO(BaseEstimator, RegressorMixin):
         err = np.zeros(len(taus))
         tot = 0.0
         for tr, va in splitter.split(X):
-            fold = self._path(X[tr], y[tr], w_all[tr], taus)
+            fold = self._path(X[tr], y[tr], w_all[tr], taus, loo=False)
             for i, r in enumerate(fold):
                 res = y[va] - X[va] @ r["coef"] - r["intercept"]
                 err[i] += w_all[va] @ res ** 2

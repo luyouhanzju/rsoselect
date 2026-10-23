@@ -84,11 +84,41 @@ The budgets are tuned over a grid:
 
 | model | criteria (default first) |
 |---|---|
-| `RSO` | `"profile_bic"` (OLS refit on the selected set), `"naive_bic"`, `"cv"` |
+| `RSO` | `"profile_bic"` (OLS refit on the selected set), `"naive_bic"`, `"cv"`, `"loo"` |
 | `PLM` | `"profile_bic"` (local linear refit, eq. 10), `"naive_bic"` (eq. 7) |
 | `GPLM` | `"refit_bic"` (eq. 5.17), `"naive_bic"` (eq. 4.11) |
 
 For time series, use `RSO(criterion="cv", cv=TimeSeriesSplit(5))`.
+
+`criterion="loo"` is the closed-form leave-one-out error (PRESS),
+`e_i / (1 - h_ii)` with `H` the hat matrix of the reported fit. It costs one fit per
+budget and needs no scikit-learn. It holds `gamma` fixed at the full-sample estimate,
+so it is optimistic relative to exact leave-one-out, which is
+`RSO(criterion="cv", cv=LeaveOneOut())` (one fit per observation and budget). Like AIC,
+LOO targets prediction error and may keep a few more variables than BIC.
+
+### Stochastic discount factors (MSRR)
+
+Ridge estimates of SDF weights minimize `mean((1 - F @ lam)**2) + penalty`, where `F`
+holds the factor returns (T x P). That is a regression of a vector of ones on `F`
+with no intercept, so RSO applies directly, and `"loo"` gives leave-one-period-out
+selection of the budget:
+
+```python
+P = F_train.shape[1]
+z = 10.0 ** np.arange(-10, 4)      # ridge penalties, e.g. Kelly et al.'s grid
+m = RSO(criterion="loo", taus=P / z, fit_intercept=False, standardize=False,
+        refit=False)
+m.fit(F_train, np.ones(len(F_train)))
+lam = m.coef_                      # SDF / portfolio weights, zero for dropped factors
+r_sdf = F_test @ lam               # out-of-sample SDF portfolio returns
+```
+
+Keep `fit_intercept=False`: an intercept would absorb the vector of ones and set every
+weight to zero. With uniform `gamma`, the RSO penalty is `(P / tau) * lam @ lam`, so
+`taus = P / z` puts the budgets on the same scale as a ridge penalty `z` (the default
+`taus` assume standardized columns and are too small for raw returns). `P / m.tau_` is
+the ridge-equivalent penalty of the selected budget.
 
 ## Main parameters
 

@@ -13,4 +13,4 @@ from .plm import PLM
 from .tuning import aic, bic, default_taus
 
 __all__ = ["RSO", "rso", "PLM", "GPLM", "mcd", "bic", "aic", "default_taus"]
-__version__ = "0.2.1"
+__version__ = "0.3.0"
